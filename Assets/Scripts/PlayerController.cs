@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -14,30 +15,51 @@ public class PlayerController : MonoBehaviour
     public bool hasPowerup = false;
     private float powerupStrength = 15;
     public SpriteRenderer powerupIndicatorSR;
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip bark;
+    public AudioClip chomp;
+    [Header("Other")]
+    public bool hasDied = false;
+    public ParticleSystem powerupGlow;
+    
 
     // Start is called before the first frame update
     void Start()
     {
         playerRB = GetComponent<Rigidbody2D>();
         powerupIndicatorSR = GameObject.Find("Powerup Indicator").GetComponent<SpriteRenderer>();
+        audioSource = GetComponent<AudioSource>();
+        powerupGlow.Stop();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.D))
+        if (!hasDied)
         {
-            playerRB.AddForce(Vector2.right * moveSpeed, ForceMode2D.Impulse);
-        }
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            playerRB.AddForce(Vector2.left * moveSpeed, ForceMode2D.Impulse);
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                playerRB.AddForce(Vector2.right * moveSpeed, ForceMode2D.Impulse);
+            }
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                playerRB.AddForce(Vector2.left * moveSpeed, ForceMode2D.Impulse);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space) && isOnGround)
+            {
+                playerRB.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                isOnGround = false;
+            }
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && isOnGround)
+
+        if (transform.position.y < -10)
         {
-            playerRB.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            isOnGround = false;
+            Debug.Log("You Died");
+            hasDied = true;
+            SceneManager.LoadScene("DeathScreen");
         }
     }
 
@@ -52,6 +74,7 @@ public class PlayerController : MonoBehaviour
             Rigidbody2D enemyRB = collision.gameObject.GetComponent<Rigidbody2D>();
             Vector2 awayFromPlayer = (collision.gameObject.transform.position - transform.position);
             enemyRB.AddForce(awayFromPlayer * powerupStrength, ForceMode2D.Impulse);
+            audioSource.PlayOneShot(bark);
         }
     }
 
@@ -63,6 +86,8 @@ public class PlayerController : MonoBehaviour
             Destroy(collision.gameObject);
             hasPowerup = true;
             powerupIndicatorSR.enabled = true;
+            audioSource.PlayOneShot(chomp);
+            powerupGlow.Play();
             StartCoroutine(PowerupCooldown());
         }
     }
@@ -72,5 +97,6 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(10);
         hasPowerup = false;
         powerupIndicatorSR.enabled = false;
+        powerupGlow.Stop();
     }
 }

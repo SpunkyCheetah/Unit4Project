@@ -8,11 +8,13 @@ public class SpawnManager : MonoBehaviour
     public GameObject powerup;
     public int numberOfEnemies;
     public int wave;
-    
+    public AudioSource audioSource;
+    public AudioClip meow;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -30,8 +32,9 @@ public class SpawnManager : MonoBehaviour
     {
         for (int i = 0; i < waveSize; i++)
         {
-            Instantiate(enemy, new Vector2(Random.Range(-7, 7), 5), enemy.transform.rotation);
+            Instantiate(enemy, new Vector2(Random.Range(-8, 8), 5), enemy.transform.rotation);
         }
         Instantiate(powerup, new Vector2(Random.Range(-2, 4), Random.Range(-4, 0)), powerup.transform.rotation);
+        audioSource.PlayOneShot(meow);
     }
 }
